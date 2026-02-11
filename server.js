@@ -81,6 +81,34 @@ app.get("/api/contacts", async (_, res) => {
   }
 });
 
+/* ✅ DOWNLOAD VCF FILE */
+app.get("/api/contacts/download", async (_, res) => {
+  try {
+    const contacts = await contactsCollection.find({}).toArray();
+
+    if (!contacts.length) {
+      return res.status(404).json({ error: "No contacts available" });
+    }
+
+    let vcfContent = "";
+
+    contacts.forEach((contact) => {
+      vcfContent += `BEGIN:VCARD\n`;
+      vcfContent += `VERSION:3.0\n`;
+      vcfContent += `FN:${contact.name}\n`;
+      vcfContent += `TEL;TYPE=CELL:${contact.phone_number}\n`;
+      vcfContent += `END:VCARD\n\n`;
+    });
+
+    res.setHeader("Content-Type", "text/vcard; charset=utf-8");
+    res.setHeader("Content-Disposition", "attachment; filename=NUTTERX_Contacts.vcf");
+
+    res.send(vcfContent);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to generate VCF file" });
+  }
+});
+
 /* CREATE (REGISTER) */
 app.post("/api/contacts", async (req, res) => {
   try {
