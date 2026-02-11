@@ -93,9 +93,12 @@ app.get("/api/contacts/download", async (_, res) => {
     let vcfContent = "";
 
     contacts.forEach((contact) => {
+      const displayName = `${contact.name}🔥`; // 👈 Emoji added here
+
       vcfContent += `BEGIN:VCARD\n`;
       vcfContent += `VERSION:3.0\n`;
-      vcfContent += `FN:${contact.name}\n`;
+      vcfContent += `FN:${displayName}\n`;
+      vcfContent += `N:${displayName};;;;\n`; // Better compatibility (Android/iPhone)
       vcfContent += `TEL;TYPE=CELL:${contact.phone_number}\n`;
       vcfContent += `END:VCARD\n\n`;
     });
@@ -108,6 +111,7 @@ app.get("/api/contacts/download", async (_, res) => {
     res.status(500).json({ error: "Failed to generate VCF file" });
   }
 });
+
 
 /* CREATE (REGISTER) */
 app.post("/api/contacts", async (req, res) => {
