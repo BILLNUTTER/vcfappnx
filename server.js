@@ -141,7 +141,7 @@ app.put("/api/contacts", async (req, res) => {
   try {
     const { old_phone_number, new_name, new_phone_number } = req.body;
     if (!old_phone_number || (!new_name && !new_phone_number))
-      return res.status(400).json({ error: "Required data missing" });
+      return res.status(400).json({ error: "Required data missing contact dev Nutterx +254713881613 to update for you." });
 
     const update = {};
     if (new_name) update.name = new_name;
