@@ -104,7 +104,7 @@ app.get("/api/contacts/download", async (_, res) => {
     });
 
     res.setHeader("Content-Type", "text/vcard; charset=utf-8");
-    res.setHeader("Content-Disposition", "attachment; filename=NUTTERX🔥.vcf");
+    res.setHeader("Content-Disposition", "attachment; filename=NUTTERX.vcf");
 
     res.send(vcfContent);
   } catch (err) {
