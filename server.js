@@ -117,21 +117,27 @@ app.get("/api/contacts/download", async (_, res) => {
 app.post("/api/contacts", async (req, res) => {
   try {
     const { name, phone_number } = req.body;
-    if (!name || !phone_number) return res.status(400).json({ error: "Name and phone number are required" });
+    if (!name || !phone_number) 
+      return res.status(400).json({ error: "Name and phone number are required" });
 
     const cleanedPhone = phone_number.replace(/\D/g, "");
+
     if (cleanedPhone.length < 10 || cleanedPhone.length > 15)
       return res.status(400).json({ error: "Invalid phone number (10–15 digits)" });
 
-    const count = await contactsCollection.countDocuments();
-    if (count >= 250) return res.status(403).json({ error: "Contact limit (250) reached" });
+    // 🔒 Blocked numbers
+    const blockedNumbers = ["254713380848", "254712345678"];
+    if (blockedNumbers.includes(cleanedPhone)) {
+      return res.status(403).json({ error: "This number is restricted from registering." });
+    }
 
     const newContact = { name, phone_number: cleanedPhone, link: SUPPORT_LINK, created_at: new Date() };
 
     await contactsCollection.insertOne(newContact);
     res.status(201).json({ message: "Contact saved successfully", contact: newContact });
   } catch (err) {
-    if (err.code === 11000) return res.status(409).json({ error: "Phone number already registered" });
+    if (err.code === 11000) 
+      return res.status(409).json({ error: "Phone number already registered" });
     res.status(500).json({ error: "Failed to save contact" });
   }
 });
