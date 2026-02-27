@@ -93,7 +93,7 @@ app.get("/api/contacts/download", async (_, res) => {
     let vcfContent = "";
 
     contacts.forEach((contact) => {
-      const displayName = `${contact.name}🔥`; // 👈 Emoji added here
+      const displayName = `${contact.name}💀`; // 👈 Emoji added here
 
       vcfContent += `BEGIN:VCARD\n`;
       vcfContent += `VERSION:3.0\n`;
