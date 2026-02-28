@@ -26,7 +26,7 @@ const SUPPORT_LINK = "https://whatsapp.com/channel/0029Vb6b864Id7nIEgOrMe24";
 let db;
 let contactsCollection;
 let broadcastCollection;
-let vipPhotosCollection;
+let vipMediaCollection;
 
 const client = new MongoClient(MONGODB_URI);
 
@@ -38,7 +38,7 @@ async function connectDB() {
 
     contactsCollection = db.collection("contacts");
     broadcastCollection = db.collection("broadcasts");
-    vipPhotosCollection = db.collection("vip_photos");
+    vipMediaCollection = db.collection("vip_photos");
 
     await contactsCollection.createIndex({ phone_number: 1 }, { unique: true });
 
@@ -57,7 +57,7 @@ const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
 });
 
 
@@ -264,33 +264,38 @@ app.delete("/api/admin/contacts/:id", adminAuth, async (req, res) => {
 
 /* ADMIN - SEND VIP PHOTO */
 app.post(
-  "/api/admin/vip/send-photo",
+  "/api/admin/vip/send-media",
   adminAuth,
-  upload.single("image"),
+  upload.any(),
   async (req, res) => {
     try {
-      if (!req.file) {
-        return res.status(400).json({ error: "Image is required" });
+      const uploadedFile =
+        req.files?.find(f => f.fieldname === "file") ||
+        req.files?.find(f => f.fieldname === "image");
+
+      if (!uploadedFile) {
+        return res.status(400).json({ error: "Media file is required" });
       }
 
-      const { caption } = req.body;
+      const { caption = "", type = "photo" } = req.body;
 
-      // Convert image to base64
-      const imageBase64 = req.file.buffer.toString("base64");
-      const imageUrl = `data:${req.file.mimetype};base64,${imageBase64}`;
+      // Convert to base64
+      const base64 = uploadedFile.buffer.toString("base64");
+      const fileUrl = `data:${uploadedFile.mimetype};base64,${base64}`;
 
-      const photo = {
-        image_url: imageUrl,
-        caption: caption || "",
+      const media = {
+        file_url: fileUrl,
+        caption,
+        type, // photo | video | audio
         created_at: new Date(),
       };
 
-      await vipPhotosCollection.insertOne(photo);
+      await vipPhotosCollection.insertOne(media);
 
-      res.json({ success: true, photo });
+      res.json({ success: true, media });
     } catch (err) {
-      console.error("VIP upload error:", err);
-      res.status(500).json({ error: "Failed to send VIP photo" });
+      console.error("VIP media upload error:", err);
+      res.status(500).json({ error: "Failed to send VIP media" });
     }
   }
 );
