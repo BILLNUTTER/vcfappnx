@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import multer from "multer";
 import { MongoClient, ObjectId } from "mongodb";
 import dotenv from "dotenv";
 
@@ -25,6 +26,7 @@ const SUPPORT_LINK = "https://whatsapp.com/channel/0029Vb6b864Id7nIEgOrMe24";
 let db;
 let contactsCollection;
 let broadcastCollection;
+let vipPhotosCollection;
 
 const client = new MongoClient(MONGODB_URI);
 
@@ -36,6 +38,7 @@ async function connectDB() {
 
     contactsCollection = db.collection("contacts");
     broadcastCollection = db.collection("broadcasts");
+    vipPhotosCollection = db.collection("vip_photos");
 
     await contactsCollection.createIndex({ phone_number: 1 }, { unique: true });
 
@@ -49,6 +52,14 @@ async function connectDB() {
 /* ================= MIDDLEWARE ================= */
 app.use(cors());
 app.use(express.json());
+
+const storage = multer.memoryStorage();
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+});
+
 
 /* ================= HEALTH ================= */
 app.get("/health", (_, res) => {
@@ -246,6 +257,55 @@ app.delete("/api/admin/contacts/:id", adminAuth, async (req, res) => {
     res.json({ message: "Contact deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: "Failed to delete contact" });
+  }
+});
+
+/* ================= VIP PHOTOS ================= */
+
+/* ADMIN - SEND VIP PHOTO */
+app.post(
+  "/api/admin/vip/send-photo",
+  adminAuth,
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Image is required" });
+      }
+
+      const { caption } = req.body;
+
+      // Convert image to base64
+      const imageBase64 = req.file.buffer.toString("base64");
+      const imageUrl = `data:${req.file.mimetype};base64,${imageBase64}`;
+
+      const photo = {
+        image_url: imageUrl,
+        caption: caption || "",
+        created_at: new Date(),
+      };
+
+      await vipPhotosCollection.insertOne(photo);
+
+      res.json({ success: true, photo });
+    } catch (err) {
+      console.error("VIP upload error:", err);
+      res.status(500).json({ error: "Failed to send VIP photo" });
+    }
+  }
+);
+
+/* VIP - GET PHOTOS */
+app.get("/api/vip/photos", async (_, res) => {
+  try {
+    const photos = await vipPhotosCollection
+      .find({})
+      .sort({ created_at: -1 })
+      .toArray();
+
+    res.json({ photos });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch VIP photos" });
   }
 });
 
