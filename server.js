@@ -282,7 +282,7 @@ app.post(
 const allowedTypes = {
   photo: ["image/jpeg", "image/jpg", "image/png", "image/webp"],
   video: ["video/mp4", "video/webm", "video/quicktime"],
-  audio: ["audio/mpeg", "audio/mp3", "audio/ogg", "audio/wav"],
+  audio: ["audio/mpeg", "audio/mp3", "audio/mp4" "audio/ogg", "audio/wav"],
 };
 
 if (!allowedTypes[type]?.includes(uploadedFile.mimetype)) {
