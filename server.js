@@ -279,10 +279,10 @@ app.post(
 
       const { caption = "", type = "photo" } = req.body;
 
-      const allowedTypes = {
-  photo: ["image/jpeg", "image/png", "image/webp"],
-  video: ["video/mp4", "video/webm"],
-  audio: ["audio/mpeg", "audio/mp3", "audio/ogg"],
+const allowedTypes = {
+  photo: ["image/jpeg", "image/jpg", "image/png", "image/webp"],
+  video: ["video/mp4", "video/webm", "video/quicktime"],
+  audio: ["audio/mpeg", "audio/mp3", "audio/ogg", "audio/wav"],
 };
 
 if (!allowedTypes[type]?.includes(uploadedFile.mimetype)) {
@@ -301,7 +301,7 @@ if (!allowedTypes[type]?.includes(uploadedFile.mimetype)) {
         created_at: new Date(),
       };
 
-      await vipPhotosCollection.insertOne(media);
+      await vipMediaCollection.insertOne(media);
 
       res.json({ success: true, media });
     } catch (err) {
@@ -311,17 +311,18 @@ if (!allowedTypes[type]?.includes(uploadedFile.mimetype)) {
   }
 );
 
-/* VIP - GET PHOTOS */
+/* VIP - GET MEDIA */
 app.get("/api/vip/photos", async (_, res) => {
   try {
-    const photos = await vipPhotosCollection
+    const photos = await vipMediaCollection
       .find({})
       .sort({ created_at: -1 })
       .toArray();
 
     res.json({ photos });
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch VIP photos" });
+    console.error("Fetch VIP media error:", err);
+    res.status(500).json({ error: "Failed to fetch VIP media" });
   }
 });
 
