@@ -279,6 +279,17 @@ app.post(
 
       const { caption = "", type = "photo" } = req.body;
 
+      const allowedTypes = {
+  photo: ["image/jpeg", "image/png", "image/webp"],
+  video: ["video/mp4", "video/webm"],
+  audio: ["audio/mpeg", "audio/mp3", "audio/ogg"],
+};
+
+if (!allowedTypes[type]?.includes(uploadedFile.mimetype)) {
+  return res.status(400).json({
+    error: `Invalid ${type} file type`,
+  });
+}
       // Convert to base64
       const base64 = uploadedFile.buffer.toString("base64");
       const fileUrl = `data:${uploadedFile.mimetype};base64,${base64}`;
